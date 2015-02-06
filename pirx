@@ -1,0 +1,51 @@
+-- PIRX API FOR DRONES
+-- For all your mining needs
+-- made by Joon
+
+
+-- Turn around (bright eyes..)
+function aboutFace()
+	turtle.turnLeft()
+	turtle.turnLeft()
+end
+
+-- Turn then move until a block is detected
+function keepMoving(_dir)
+	if _dir == "t" then aboutFace()
+	elseif _dir == "l" then turtle.turnLeft()
+	elseif _dir == "r" then turtle.turnRight() end
+	while not turtle.detect() do turtle.forward() end
+end
+
+-- Issue a set of commands and perform sequentially
+function moveCommands(_cmdArray)
+	for i = 1, #_cmdArray do
+		if _cmdArray[i] == "f" then turtle.forward()
+		elseif _cmdArray[i] == "l" then turtle.turnLeft()
+		elseif _cmdArray[i] == "r" then turtle.turnRight()
+		elseif _cmdArray[i] == "t" then aboutFace()
+		elseif _cmdArray[i] == "b" then turtle.back()
+		elseif _cmdArray[i] == "u" then turtle.up()
+		elseif _cmdArray[i] == "d" then turtle.down() end
+	end
+end
+
+-- Drop all items in non-system inventory slots
+function dropItems(_first,_last)
+	for i = _first, _last do
+		turtle.select(i)
+		turtle.drop()
+	end
+end
+
+
+-- Pathing - movement based on floor blocks
+-- Movement logic
+--	- Slot 15: points direction (left or right)
+--	- Slot 14: stop
+--  - Slot 15 in front: move up
+--	- Slot 14 in front: move down
+--	- Any block in front: stop
+-- Recommended materials
+--	- Slot 15: 1 glass
+--	- Slot 14: 1 sandstone

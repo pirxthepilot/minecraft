@@ -1,0 +1,7 @@
+while true do
+ if turtle.detectDown() then
+  break
+ else
+  turtle.down()
+ end
+end

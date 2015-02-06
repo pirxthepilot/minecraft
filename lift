@@ -1,0 +1,86 @@
+-- Drone lift program
+-- Version 1.0
+-- Requires: none
+
+local args = {...}
+local s1
+if #args == 1 then s1 = args[1] end
+
+floor_blocks = 6	-- blocks between floors
+
+function dispTitle()
+	term.clear()
+	term.setCursorPos(1,1)
+	print("------------")
+	print(" Drone Lift")
+	print("------------\n")
+end
+
+function arriveMsg()
+	term.clear()
+	term.setCursorPos(1,1)
+	print("Drone has arrived!")
+end
+
+if s1 == nil then	
+	dispTitle()
+	print("1) Go up")
+	print("2) Go down")
+	print("3) Go to lowest level")
+	print("4) Go to the topmost floor")
+	print("5) Quit this program")
+	print("")
+	print("Where to?")
+
+	while true do
+	 term.clearLine()
+	 event, s1 = os.pullEvent("char")
+	 if s1 == "1" or s1 == "2" or s1 == "3" or s1 == "4" or s1 == "5" then break end
+	end
+end
+	
+if s1 == "5" then
+	term.clear()
+	term.setCursorPos(1,1)
+	print("Program terminated")
+	return
+end
+
+if s1 == "3" then
+	print("Going all the way down..")
+	while not turtle.detectDown() do turtle.down() end
+	arriveMsg()
+	return
+end
+
+if s1 == "4" then
+	print("Going all the way up..")
+	while not turtle.detectUp() do turtle.up() end
+	turtle.down()
+	arriveMsg()
+	return
+end
+
+if s1 == "1" or s1 == "2" then
+	while true do
+		dispTitle()
+		if s1 == "1" then print("Go UP how many floors?") end
+		if s1 == "2" then print("Go DOWN how many floors?") end
+		s2 = io.read()
+		if string.find(s2,"^%d+$") then break end
+	end
+
+	s2 = tonumber(s2)
+	dispTitle()
+	print("Starting lift..")
+
+	for i = 1,s2*floor_blocks do
+		if s1 == "1" then turtle.up() end
+		if s1 == "2" then turtle.down() end
+	end
+
+	arriveMsg()
+	return
+end
+
+print("Invalid input")

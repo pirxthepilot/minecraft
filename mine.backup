@@ -1,0 +1,139 @@
+--MAWHRIN-SKEL
+
+sets = 8		-- number of branchings
+branch = 32		-- length of one branch
+trunk = 5		-- length from one branch to the next
+torchgap = 7	-- distance from one torch to the next
+t_slot = 2		-- initial torch slot number
+last_t_slot = 4 -- last slot where torch is stored
+
+function goMine(_len,_tgap)
+	for i = 0,_len-1,1 do
+	 while not turtle.forward() do
+      if turtle.detect() then
+       if not turtle.dig() then
+        return false
+       end
+      else
+       sleep(1) -- wait for sand / gravel to fall
+      end
+     end
+	 --while not turtle.forward() do
+	 -- turtle.dig()
+	 -- sleep(0.25)
+	 --end
+	 selectTorchSlot() -- torch in slot
+	 puttorch = i%_tgap
+	 digdown = i%2
+	 if digdown == 1 then
+	  turtle.digDown()
+	  turtle.down()
+	  if puttorch == 0 then
+	   turtle.up()
+	   aboutFace()
+	   turtle.place() -- place torch
+	   aboutFace()
+	   turtle.down()
+	  end
+	 else
+	  turtle.digUp()
+	  turtle.up()
+	  if puttorch == 0 then
+	   aboutFace()
+	   turtle.place() -- place torch
+	   aboutFace()
+	  end
+	 end
+	end
+	resetpos = _len%2
+	if resetpos == 1 then
+	 turtle.down()
+	end
+end
+
+function turnDir(_j)
+ digleft = _j%2
+ if digleft == 1 then
+  turtle.turnLeft()
+ else
+  turtle.turnRight()
+ end
+end
+
+function branchMine(_sets)
+ for j = 0,_sets-1,1 do
+  goMine(branch,torchgap)
+  if j < _sets-1 then
+   turnDir(j)
+   goMine(trunk,trunk+1)
+   turnDir(j)
+  end
+ end
+ backtotrunk = _sets%2
+ if backtotrunk == 1 then
+  returntoTrunk()
+ end
+end
+
+function trunkMine(_sets)
+ for k = 0,_sets-1,1 do
+  turtle.digDown()
+  turtle.select(1) -- trunk marker block in slot 1
+  turtle.placeDown()
+  if k < _sets-1 then
+   goMine(trunk,trunk+1)
+  end
+ end
+end
+
+function park()
+ turtle.forward()
+ turtle.forward()
+ turtle.turnLeft()
+ turtle.back()
+ turtle.back()
+ turtle.back()
+end
+
+function returntoTrunk()
+ aboutFace()
+ for f = 0,branch-1,1 do
+  turtle.forward()
+ end
+end
+
+function returntoOrigin()
+ turtle.turnRight()
+ for r = 0,trunk*(sets-1)-1,1 do
+  turtle.forward()
+  trunktorch = r%trunk
+  if trunktorch == 0 then		-- place torches on the way back
+   selectTorchSlot()
+   turtle.placeUp()
+  end
+ end
+end
+
+function aboutFace()
+ turtle.turnLeft()
+ turtle.turnLeft()
+end
+
+function selectTorchSlot()
+ if turtle.getItemCount(t_slot) <= 1 then
+  if t_slot == last_t_slot then
+   print("Out of torches! Refill then press any key to resume mining.")
+   read()
+   t_slot = 1
+  end
+  t_slot = t_slot + 1
+ end
+ turtle.select(t_slot)
+end
+
+trunkMine(sets)
+turtle.turnRight()
+branchMine(sets)
+branchMine(sets)
+returntoOrigin()
+park()

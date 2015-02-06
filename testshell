@@ -1,0 +1,2 @@
+shell.run("lift","3")
+print("whoa!")

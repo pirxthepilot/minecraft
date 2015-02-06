@@ -1,0 +1,270 @@
+-- Drone branch mining program
+-- Requires: store
+
+droneID = os.getComputerLabel()
+version = "1.0"
+
+sets = 8		-- number of branchings
+branch = 32		-- length of one branch
+trunk = 5		-- length from one branch to the next
+torchgap = 7	-- distance from one torch to the next
+t_slot = 2		-- initial torch slot number
+last_t_slot = 4 -- last slot where torch is stored
+g_slot = 16		-- gravel slot
+
+function goMine(_len,_tgap)
+	for i = 0,_len-1,1 do
+	 --while not turtle.forward() do
+     -- if turtle.detect() then
+     --  if not turtle.dig() then
+     --   return false
+     --  end
+     -- else
+     --  sleep(0.25) -- wait for sand / gravel to fall
+     -- end
+     --end
+	 while not turtle.forward() do smartDig() end
+	 selectTorchSlot() -- torch in slot
+	 puttorch = i%_tgap
+	 digdown = i%2
+	 if digdown == 1 then
+	  turtle.digDown()
+	  turtle.down()
+	  if puttorch == 0 then
+	   turtle.up()
+	   aboutFace()
+	   turtle.place() -- place torch
+	   aboutFace()
+	   turtle.down()
+	  end
+	 else
+	  turtle.digUp()
+	  turtle.up()
+	  if puttorch == 0 then
+	   aboutFace()
+	   turtle.place() -- place torch
+	   aboutFace()
+	  end
+	 end
+	end
+	resetpos = _len%2
+	if resetpos == 1 then
+	 turtle.down()
+	end
+end
+
+function smartDig()
+	turtle.select(g_slot)
+	if turtle.compare() then
+		for x = 1,20 do
+			turtle.dig()
+			sleep(0.25)
+		end
+	else
+		turtle.dig()
+	end
+end
+
+function turnDir(_j)
+ digleft = _j%2
+ if digleft == 1 then
+  turtle.turnLeft()
+ else
+  turtle.turnRight()
+ end
+end
+
+function branchMine(_sets)
+ for j = 0,_sets-1,1 do
+  goMine(branch,torchgap)
+  if j < _sets-1 then
+   turnDir(j)
+   goMine(trunk,trunk+1)
+   turnDir(j)
+  end
+ end
+ backtotrunk = _sets%2
+ if backtotrunk == 1 then
+  returntoTrunk()
+ end
+end
+
+function trunkMine(_sets)
+ for k = 0,_sets-1,1 do
+  turtle.digDown()
+  turtle.select(1) -- trunk marker block in slot 1
+  turtle.placeDown()
+  if k < _sets-1 then
+   goMine(trunk,trunk+1)
+  end
+ end
+end
+
+function park()
+ turtle.forward()
+ turtle.forward()
+ turtle.turnLeft()
+ turtle.back()
+ turtle.back()
+ turtle.back()
+end
+
+function unpark()
+ turtle.forward()
+ turtle.forward()
+ turtle.forward()
+ turtle.turnLeft()
+ turtle.forward()
+ turtle.forward()
+end
+
+function returntoTrunk()
+ aboutFace()
+ for f = 0,branch-1,1 do
+  turtle.forward()
+ end
+end
+
+function returntoOrigin()
+ turtle.turnRight()
+ for r = 0,trunk*(sets-1)-1,1 do
+  turtle.forward()
+  trunktorch = r%trunk
+  if trunktorch == 0 then		-- place torches on the way back
+   selectTorchSlot()
+   turtle.placeUp()
+  end
+ end
+end
+
+function aboutFace()
+ turtle.turnLeft()
+ turtle.turnLeft()
+end
+
+function isParked()
+ aboutFace()
+ if turtle.detect() then amiparked = true else amiparked = false end
+ aboutFace()
+ return amiparked
+end
+
+function selectTorchSlot()
+ if turtle.getItemCount(t_slot) <= 1 then
+  if t_slot == last_t_slot then
+   print("Out of torches! Refill then press any key to resume mining.")
+   read()
+   t_slot = 1
+  end
+  t_slot = t_slot + 1
+ end
+ turtle.select(t_slot)
+end
+
+function dispTitle()
+	term.clear()
+	term.setCursorPos(1,1)
+	print("------------------")
+	print(" "..droneID.." "..version)
+	print("------------------\n")
+end
+
+function mainMenu()
+	while true do
+		dispTitle()
+		print("1) Full mining")
+		print("2) Full mining and storage")
+		print("3) Mine the trunk only")
+		print("4) Mine the branches only (one side)")
+		print("5) Storage (must be parked)")
+		print("6) Quit")
+		print("")
+		event, s1 = os.pullEvent("char")
+		if s1 == "1" or s1 == "2" or s1 == "3" or s1 == "4" or s1 == "5" or s1 == "6" then break end
+	end
+end
+
+
+	
+-- PROGRAM START
+while true do
+
+mainMenu()
+
+-- Full mining
+if s1 == "1" or s1 == "2" then
+	while true do
+		dispTitle()
+		print("Make sure the drone is in position. Commence? [y/n]")
+		event, yesno = os.pullEvent("char")
+		if yesno == "y" or yesno == "n" then break end
+	end
+	if yesno == "y" then
+		dispTitle()
+		print("Full mining in progress..")
+		if isParked() then unpark() end
+		trunkMine(sets)
+		turtle.turnRight()
+		branchMine(sets)	-- first mine the entire right side
+		branchMine(sets)	-- then the left
+		returntoOrigin()
+		park()
+	end
+end
+
+-- Trunk only
+if s1 == "3" or s1 == "4" then
+	while true do
+		dispTitle()
+		print("Make sure the drone is in position. Proceed? [y/n]")
+		event, yesno = os.pullEvent("char")
+		if yesno == "y" or yesno == "n" then break end
+	end
+	if yesno == "y" then
+		dispTitle()
+		if isParked() then		-- abort if parked
+			print("Drone is parked! Move to position or remove the block behind it. Aborting..")
+			sleep(2)
+		else
+			if s1 == "3" then
+				print("Trunk mining in progress..")
+				trunkMine(sets)
+			elseif s1 == "4" then
+				print("Branch mining in progress..")
+				branchMine(sets)
+			end
+		end
+	end
+end
+
+-- Storage
+if s1 == "5" then
+	while true do
+		dispTitle()
+		print("Make sure the drone is parked. Proceed? [y/n]")
+		event, yesno = os.pullEvent("char")
+		if yesno == "y" or yesno == "n" then break end
+	end
+	if yesno == "y" then
+		dispTitle()
+		if isParked() then
+			print("Storage of inventory in progress...")
+			shell.run("store","1")
+		else				-- abort if not parked
+			print("Drone is not parked! Aborting..")
+			sleep(2)
+		end
+	end
+end
+
+-- Quit
+if s1 == "6" then
+	term.clear()
+	term.setCursorPos(1,1)
+	print("Program terminated.")
+	return
+end
+
+
+
+end

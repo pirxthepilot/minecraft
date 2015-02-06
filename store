@@ -1,0 +1,38 @@
+-- Drone storage program
+-- Version 0.1
+-- Requires: lift
+
+os.loadAPI("pirx")
+
+
+local args = {...}
+local mode
+if #args == 1 then mode = args[1] end
+
+-- Modes
+-- 1: Full
+-- 2: Quick
+
+function fullDump()
+	pirx.keepMoving("t")
+	turtle.up()
+	turtle.forward()
+	pirx.keepMoving("l")
+	pirx.keepMoving("l")
+	pirx.moveCommands({ "l", "f", "r" })
+	pirx.keepMoving()
+	pirx.dropItems(5, 13)
+	pirx.keepMoving("t")
+	pirx.keepMoving("l")
+	pirx.keepMoving("r")
+	pirx.keepMoving("r")
+	pirx.moveCommands({ "r", "f", "d", "f", "f", "f" })
+end
+
+-- Full Mode
+if mode == "1" then
+	-- go all the way down
+	shell.run("lift","3")
+	fullDump()
+end
+	
